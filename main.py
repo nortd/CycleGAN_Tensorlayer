@@ -128,22 +128,10 @@ def train_cyclegan():
     # with tf.device('/gpu:0'):
     with tf.variable_scope('learning_rate'):
         lr_v = tf.Variable(FLAGS.learning_rate, trainable=False)
-    with tf.device('/gpu:1'):
-        g_a2b_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(g_a2b_loss, var_list=g_A2B_vars)
-    with tf.device('/gpu:2'):
-        g_b2a_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(g_b2a_loss, var_list=g_B2A_vars)
-    with tf.device('/gpu:3'):
-        d_a_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(d_a_loss, var_list=d_A_vars)
-    with tf.device('/gpu:4'):
-        d_b_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(d_b_loss, var_list=d_B_vars)
-
-    # # with tf.device('/gpu:0'):
-    # with tf.variable_scope('learning_rate'):
-    #     lr_v = tf.Variable(FLAGS.learning_rate, trainable=False)
-    # g_a2b_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(g_a2b_loss, var_list=g_A2B_vars)
-    # g_b2a_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(g_b2a_loss, var_list=g_B2A_vars)
-    # d_a_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(d_a_loss, var_list=d_A_vars)
-    # d_b_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(d_b_loss, var_list=d_B_vars)
+    g_a2b_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(g_a2b_loss, var_list=g_A2B_vars)
+    g_b2a_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(g_b2a_loss, var_list=g_B2A_vars)
+    d_a_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(d_a_loss, var_list=d_A_vars)
+    d_b_optim = tf.train.AdamOptimizer(lr_v, beta1=FLAGS.beta1).minimize(d_b_loss, var_list=d_B_vars)
 
     ## init params
     tl.layers.initialize_global_variables(sess)
