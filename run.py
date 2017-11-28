@@ -1,0 +1,94 @@
+"""Run NN through various phases.
+
+1. 'extract' images from video.
+2. 'prep' training set
+3. 'train' model
+4. 'test' model
+5. 'videofy' output
+"""
+
+import os
+import argparse
+
+import path
+import vm
+
+# PROJECT = "enhance2"
+PROJECT = "odyssey2ghost"
+VIDEO_A = "../../../a-space-odyssey.mp4"
+VIDEO_B = "../../../ghost-in-the-shell.mp4"
+# TRAINGVIDEO_FPS = "1/4"
+TRAINGVIDEO_FPS = "1/10"
+
+
+path.init(PROJECT)
+
+parser = argparse.ArgumentParser()
+# parser.add_argument("project", choices=projects)
+parser.add_argument("cmd", choices=['extract', 'prep', 'train', 'test', 'push', 'pull', 'videofy'])
+# parser.add_argument("--epochs", dest="epochs", type=int, default=200)
+# parser.add_argument("--size", dest="size", type=int, default=256)
+args = parser.parse_args()
+
+
+if args.cmd == 'extract':
+   video_extract(VIDEO_A, path.tainA, TRAINGVIDEO_FPS, scale="-2:256", pattern="image%05d.jpg")
+   video_extract(VIDEO_B, path.tranB, TRAINGVIDEO_FPS, scale="-2:256", pattern="image%05d.jpg")
+elif args.cmd == 'prep':
+   shutil.copy(path.tainA, path.testA)
+   shutil.copy(path.tainB, path.testB)
+elif args.cmd == 'train':
+    os.system("python main.py --phase train")
+elif args.cmd == 'test':
+    os.system("python main.py --phase test")
+elif args.cmd == 'push':
+    push(PROJECT)
+elif args.cmd == 'pull':
+    pull(PROJECT)
+elif args.cmd == 'videofy':
+    video_make(path.output, "out.mp4", pattern="image%d.jpg")
+
+
+
+
+
+def push(project_name):
+    """Push training set to GPU_INSTANCE."""
+    cmd = """rsync -rcP -e ssh --delete %s %s:/home/stefan/git/%s/datasets/%s/""" % \
+          (path.project, vm.GPU_INSTANCE, path.GIT_REPO_NAME, project_name)
+    os.system(cmd)
+
+
+def pull(project_name):
+    """Pull trained model from GPU_INSTANCE."""
+    cmd = """rsync -rcP -e ssh --delete %s:/home/stefan/git/%s/%s %s""" % \
+          (vm.GPU_INSTANCE, path.GIT_REPO_NAME, path.model, path.model)
+    os.system(cmd)
+
+
+
+def video_extract(video_path, out_path, fps, scale="-2:256", intime="", outtime="", pattern="image%05d.jpg"):
+    cwd = os.getcwd()
+    os.chdir(out_path)
+    intime = outtime = scale = ""
+    fps = "-r %s" % (fps)
+    filepattern = pattern
+    if scale != "":
+        scale = "-vf scale=%s" % (scale)
+    if intime != "":
+        intime = "-ss %s" % (intime)
+    if outtime != "":
+        outtime = "-ss %s" % (outtime)
+    cmd = "ffmpeg %s -i %s %s %s -f image2  -q:v 2 %s %s" % (intime, video_path, scale, fps, outtime, filepattern)
+    # cmd = """ffmpeg -i ../video.mp4  -r 1/2  -f image2  -q:v 2 image%05d.jpg"""
+    os.system(cmd)
+    os.chdir(cwd)
+
+def video_make(img_path, video_path, fps=30, quality=15, pattern="image%d.jpg"):
+    cwd = os.getcwd()
+    os.chdir(img_path)
+    # cmd = "ffmpeg -r 30 -f image2 -s 256x256 -i pic_%d-outputs.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ../out.mp4"
+    cmd = 'ffmpeg -r %s -i %s -c:v libx264 -crf %s -vf "fps=%s,format=yuv420p" %s'\
+          % (fps, pattern, quality, fps, video_path)
+    os.system(cmd)
+    os.chdir(cwd)

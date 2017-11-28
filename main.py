@@ -273,12 +273,10 @@ def main(_):
     if not os.path.exists(FLAGS.test_dir):
         os.makedirs(FLAGS.test_dir)
 
-    # if args.phase == 'train':
-    #     train_cyclegan()
-    # elif args.phase == 'test':
-    #     test_cyclegan()
-    train_cyclegan()
-    # test_cyclegan()
+    if args.phase == 'train':
+        train_cyclegan()
+    elif args.phase == 'test':
+        test_cyclegan()
 
 
 if __name__ == '__main__':
