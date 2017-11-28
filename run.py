@@ -15,40 +15,12 @@ import vm
 
 # PROJECT = "enhance2"
 PROJECT = "odyssey2ghost"
-VIDEO_A = "../../../a-space-odyssey.mp4"
-VIDEO_B = "../../../ghost-in-the-shell.mp4"
+VIDEO_A = "../../../../a-space-odyssey.mp4"
+VIDEO_B = "../../../../ghost-in-the-shell.mp4"
 # TRAINGVIDEO_FPS = "1/4"
 TRAINGVIDEO_FPS = "1/10"
 
-
 path.init(PROJECT)
-
-parser = argparse.ArgumentParser()
-# parser.add_argument("project", choices=projects)
-parser.add_argument("cmd", choices=['extract', 'prep', 'train', 'test', 'push', 'pull', 'videofy'])
-# parser.add_argument("--epochs", dest="epochs", type=int, default=200)
-# parser.add_argument("--size", dest="size", type=int, default=256)
-args = parser.parse_args()
-
-
-if args.cmd == 'extract':
-   video_extract(VIDEO_A, path.tainA, TRAINGVIDEO_FPS, scale="-2:256", pattern="image%05d.jpg")
-   video_extract(VIDEO_B, path.tranB, TRAINGVIDEO_FPS, scale="-2:256", pattern="image%05d.jpg")
-elif args.cmd == 'prep':
-   shutil.copy(path.tainA, path.testA)
-   shutil.copy(path.tainB, path.testB)
-elif args.cmd == 'train':
-    os.system("python main.py --phase train")
-elif args.cmd == 'test':
-    os.system("python main.py --phase test")
-elif args.cmd == 'push':
-    push(PROJECT)
-elif args.cmd == 'pull':
-    pull(PROJECT)
-elif args.cmd == 'videofy':
-    video_make(path.output, "out.mp4", pattern="image%d.jpg")
-
-
 
 
 
@@ -67,20 +39,20 @@ def pull(project_name):
 
 
 
-def video_extract(video_path, out_path, fps, scale="-2:256", intime="", outtime="", pattern="image%05d.jpg"):
+def video_extract(video_path, out_path, fps, scale="-2:256", intime="", duration="", pattern="image%05d.jpg"):
     cwd = os.getcwd()
     os.chdir(out_path)
-    intime = outtime = scale = ""
     fps = "-r %s" % (fps)
     filepattern = pattern
     if scale != "":
         scale = "-vf scale=%s" % (scale)
     if intime != "":
         intime = "-ss %s" % (intime)
-    if outtime != "":
-        outtime = "-ss %s" % (outtime)
-    cmd = "ffmpeg %s -i %s %s %s -f image2  -q:v 2 %s %s" % (intime, video_path, scale, fps, outtime, filepattern)
+    if duration != "":
+        duration = "-t %s" % (duration)
+    cmd = "ffmpeg %s %s -i %s %s %s -f image2  -q:v 2 %s" % (intime, duration, video_path, scale, fps, filepattern)
     # cmd = """ffmpeg -i ../video.mp4  -r 1/2  -f image2  -q:v 2 image%05d.jpg"""
+    print cmd
     os.system(cmd)
     os.chdir(cwd)
 
@@ -92,3 +64,31 @@ def video_make(img_path, video_path, fps=30, quality=15, pattern="image%d.jpg"):
           % (fps, pattern, quality, fps, video_path)
     os.system(cmd)
     os.chdir(cwd)
+
+
+
+
+parser = argparse.ArgumentParser()
+# parser.add_argument("project", choices=projects)
+parser.add_argument("cmd", choices=['extract', 'prep', 'train', 'test', 'push', 'pull', 'videofy'])
+# parser.add_argument("--epochs", dest="epochs", type=int, default=200)
+# parser.add_argument("--size", dest="size", type=int, default=256)
+args = parser.parse_args()
+
+
+if args.cmd == 'extract':
+   video_extract(VIDEO_A, path.trainA, TRAINGVIDEO_FPS, intime="00:20:00", duration="01:00:00")
+   video_extract(VIDEO_B, path.trainB, TRAINGVIDEO_FPS, intime="00:15:00", duration="01:00:00")
+elif args.cmd == 'prep':
+   shutil.copy(path.tainA, path.testA)
+   shutil.copy(path.tainB, path.testB)
+elif args.cmd == 'train':
+    os.system("python main.py --phase train")
+elif args.cmd == 'test':
+    os.system("python main.py --phase test")
+elif args.cmd == 'push':
+    push(PROJECT)
+elif args.cmd == 'pull':
+    pull(PROJECT)
+elif args.cmd == 'videofy':
+    video_make(path.output, "out.mp4", pattern="image%d.jpg")
