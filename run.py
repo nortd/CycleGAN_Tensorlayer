@@ -45,12 +45,12 @@ def video_extract(video_path, out_path, fps, scale="-2:256", intime="", duration
     fps = "-r %s" % (fps)
     filepattern = pattern
     if scale != "":
-        scale = "-vf scale=%s" % (scale)
+        scale = '-vf "crop=in_h:in_h,scale=%s"' % (scale)
     if intime != "":
         intime = "-ss %s" % (intime)
     if duration != "":
         duration = "-t %s" % (duration)
-    cmd = "ffmpeg %s %s -i %s %s %s -f image2  -q:v 2 %s" % (intime, duration, video_path, scale, fps, filepattern)
+    cmd = 'ffmpeg %s %s -i %s %s %s -f image2  -q:v 2 %s' % (intime, duration, video_path, scale, fps, filepattern)
     # cmd = """ffmpeg -i ../video.mp4  -r 1/2  -f image2  -q:v 2 image%05d.jpg"""
     print cmd
     os.system(cmd)
