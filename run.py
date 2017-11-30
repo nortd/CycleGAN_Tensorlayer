@@ -8,10 +8,13 @@
 """
 
 import os
+import glob
+import shutil
 import argparse
 
 import path
 import vm
+import imageslicer
 
 # PROJECT = "enhance2"
 PROJECT = "odyssey2ghost"
@@ -33,7 +36,7 @@ def push(project_name):
 
 def pull(project_name):
     """Pull trained model from GPU_INSTANCE."""
-    cmd = """rsync -rcP -e ssh --delete %s:/home/stefan/git/%s/%s %s""" % \
+    cmd = """rsync -rcP -e ssh --delete %s:/home/stefan/git/%s/%s/ %s""" % \
           (vm.GPU_INSTANCE, path.GIT_REPO_NAME, path.model, path.model)
     os.system(cmd)
 
@@ -70,25 +73,29 @@ def video_make(img_path, video_path, fps=30, quality=15, pattern="image%d.jpg"):
 
 parser = argparse.ArgumentParser()
 # parser.add_argument("project", choices=projects)
-parser.add_argument("cmd", choices=['extract', 'prep', 'train', 'test', 'push', 'pull', 'videofy'])
+parser.add_argument("cmd", choices=['extract', 'train', 'testprep', 'test', 'push', 'pull', 'tilejoin', 'videofy'])
 # parser.add_argument("--epochs", dest="epochs", type=int, default=200)
 # parser.add_argument("--size", dest="size", type=int, default=256)
 args = parser.parse_args()
 
 
 if args.cmd == 'extract':
-   video_extract(VIDEO_A, path.trainA, TRAINGVIDEO_FPS, intime="00:20:00", duration="01:00:00")
-   video_extract(VIDEO_B, path.trainB, TRAINGVIDEO_FPS, intime="00:15:00", duration="01:00:00")
-elif args.cmd == 'prep':
-   shutil.copy(path.tainA, path.testA)
-   shutil.copy(path.tainB, path.testB)
+    video_extract(VIDEO_A, path.trainA, TRAINGVIDEO_FPS, intime="00:20:00", duration="01:00:00", scale="-2:512")
+    # video_extract(VIDEO_A, path.trainA, TRAINGVIDEO_FPS, intime="00:20:00", duration="01:00:00")
+    # video_extract(VIDEO_B, path.trainB, TRAINGVIDEO_FPS, intime="00:15:00", duration="01:00:00")
 elif args.cmd == 'train':
     os.system("python main.py --phase train")
+elif args.cmd == 'testprep':
+    for img in glob.glob(os.path.join(path.trainA,"*.jpg")):
+        imageslicer.slice(img, 4, path.testA)
+    # shutil.copy(path.trainB, path.testB)
 elif args.cmd == 'test':
     os.system("python main.py --phase test")
 elif args.cmd == 'push':
     push(PROJECT)
 elif args.cmd == 'pull':
     pull(PROJECT)
+elif args.cmd == 'tilejoin':
+    imageslicer.joinall(path.testA, path.output)
 elif args.cmd == 'videofy':
     video_make(path.output, "out.mp4", pattern="image%d.jpg")

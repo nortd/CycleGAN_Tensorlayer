@@ -28,7 +28,8 @@ def init(project_name):
     trainA = os.path.join(project, 'trainA')
     trainB = os.path.join(project, 'trainB')
     model = 'checkpoint'
-    output = 'test'
+    test = 'test'
+    output = 'output'
 
     # create
     if not os.path.exists(project):
@@ -43,5 +44,7 @@ def init(project_name):
         os.mkdir(trainB)
     if not os.path.exists(model):
         os.mkdir(model)
+    if not os.path.exists(test):
+        os.mkdir(test)
     if not os.path.exists(output):
         os.mkdir(output)
